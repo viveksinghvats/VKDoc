@@ -1,0 +1,37 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/src/  
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - MONGO_URL=mongodb+srv://viveks1114:Mahadev_101@docs-clone.7feuf.mongodb.net/?retryWrites=true&w=majority&appName=Docs-Clone
+      - JWT_SECRET=whateverifindeasytoremember
+    ports:
+      - "2000:2000"
+      - "8080:8080"
+      
+    depends_on:
+      - kafka
+      - zookeeper
+      
+  kafka:
+    image: wurstmeister/kafka:latest
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
