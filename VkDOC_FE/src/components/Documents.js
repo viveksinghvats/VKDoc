@@ -25,7 +25,7 @@ const DocumentsPage = () => {
             </header>
 
             <div className="actions">
-                <Link to="/editor/" className="create-doc-btn">+ Create New Document</Link>
+                <Link to="/editor/new" className="create-doc-btn">+ Create New Document</Link>
             </div>
 
             <div className="documents-list">

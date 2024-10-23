@@ -15,8 +15,8 @@ const getDocument = async (documentId) => {
 
 const saveDocument = async (documentId, content) => {
     if (!documentId) {
-        const document = await axios.post(`${BASEURL}/documents/`, { title: 'New Doc', content: content }, { ...assignHeader });
-        const temp = 1;
+        const document = await axios.post(`${BASEURL}/documents/`, { title: 'untitled', content: content }, { ...assignHeader });
+        return document.data._id;
     }
     else {
         await axios.put(`${BASEURL}/documents/${documentId}`, { content }, { ...assignHeader });

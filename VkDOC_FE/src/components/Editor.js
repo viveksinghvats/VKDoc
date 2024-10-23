@@ -1,5 +1,5 @@
 // src/components/Editor.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import DocService from '../services/DocService';  // Fetching/saving doc from backend
 import { useParams } from 'react-router-dom';
@@ -8,25 +8,33 @@ import { Slate, Editable, withReact } from 'slate-react';
 import InputWithDebounce from './InputWithDebounce';
 
 function EditorPage() {
-    const [editor] = useState(() => withReact(createEditor())) // Set up Slate with history
-    const [documentContent, setDocumentContent] = useState([]);
+    const editor = useMemo(() => withReact(createEditor()), []); // Set up Slate with history
+    const [documentContent, setDocumentContent] = useState([{ type: 'paragraph', children: [{ text: 'Loading...' }] }]);
     const [docName, setDocName] = useState('name');
     const socket = useWebSocket('ws://localhost:8080');  // WebSocket server
-    const { documentId } = useParams();
+    let { documentId } = useParams();
+    const [editorKey, setEditorKey] = useState(0);
 
     // Fetch the document content when component mounts
     useEffect(() => {
-        if (documentId) {
+        if (documentId !== 'new') {
             const fetchDocument = async () => {
                 const doc = await DocService.getDocument(documentId);
-                const content = doc.content && doc.content?.length
+                const content = doc.content?.length
                     ? doc.content
                     : [{ type: 'paragraph', children: [{ text: 'Some Value' }] }];
 
                 setDocumentContent(content);
                 setDocName(doc.title);
+                setEditorKey(editorKey + 1);
             };
             fetchDocument();
+        } else if (documentId === 'new') {
+            const createDocument = async () => {
+                documentId = await DocService.saveDocument(null, [{ type: 'paragraph', children: [{ text: 'Edit this line' }] }]);
+            }
+            createDocument();
+
         }
     }, [documentId]);
 
@@ -51,9 +59,9 @@ function EditorPage() {
 
     return (
         <div>
-            <InputWithDebounce title={docName} /> 
+            <InputWithDebounce title={docName} />
             <div className="editor-container">
-                <Slate editor={editor} initialValue={documentContent} onChange={handleChange}>
+                <Slate key={editorKey} editor={editor} initialValue={documentContent} onValueChange={handleChange}>
                     <Editable
                         placeholder="Start typing your document..."
                         className="editor-placeholder"  // Optional: apply a class to the placeholder
