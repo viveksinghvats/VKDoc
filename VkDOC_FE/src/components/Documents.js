@@ -1,5 +1,4 @@
-// src/components/Documents.js
-import React, { useContext, useEffect, useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Local from '../utils/local';
 import DocService from '../services/DocService';
@@ -9,7 +8,7 @@ const DocumentsPage = () => {
     const [documents, setDocuments] = useState([]);
 
     useEffect(() => {
-        // Fetch user's documents from the API (example API call)
+        // Fetch user's documents from the API 
         const fetchAllDocuments = async () => {
             const documents = await DocService.getAllDocuments(user.id);
             setDocuments(documents);

@@ -14,7 +14,7 @@ function runSocket() {
             const { documentId, change, userId } = JSON.parse(message);
 
             // Produce the change to Kafka
-            kafkaProducer.produce('document-updates', documentId, { change, userId });
+            kafkaProducer.produce('document-updates', documentId, {documentId, change, userId });
 
             // Broadcast locally (Optional)
             wss.clients.forEach(client => {

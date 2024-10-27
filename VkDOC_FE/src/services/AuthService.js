@@ -1,5 +1,3 @@
-// services/authService.js
-
 import { BASEURL } from "../utils/constants";
 
 const authService = {

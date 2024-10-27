@@ -1,19 +1,20 @@
-// src/components/Editor.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
-import DocService from '../services/DocService';  // Fetching/saving doc from backend
+import DocService from '../services/DocService';
 import { useParams } from 'react-router-dom';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import InputWithDebounce from './InputWithDebounce';
+import local from '../utils/local';
 
 function EditorPage() {
-    const editor = useMemo(() => withReact(createEditor()), []); // Set up Slate with history
+    const editor = useMemo(() => withReact(createEditor()), []);
     const [documentContent, setDocumentContent] = useState([{ type: 'paragraph', children: [{ text: 'Loading...' }] }]);
     const [docName, setDocName] = useState('name');
-    const socket = useWebSocket('ws://localhost:8080');  // WebSocket server
+    const socket = useWebSocket('ws://localhost:8080');
     let { documentId } = useParams();
     const [editorKey, setEditorKey] = useState(0);
+    const user = local.getloggedInUser();
 
     // Fetch the document content when component mounts
     useEffect(() => {
@@ -42,29 +43,29 @@ function EditorPage() {
         editor.operations.forEach(op => {
             if (op.type === 'insert_text' || op.type === 'remove_text') {
                 socket.sendMessage({
-                    documentId,
+                    documentId: documentId,
                     change: {
                         type: op.type,
                         path: op.path,
                         offset: op.offset,
                         text: op.text
                     },
-                    userId: 'some-user-id',  // Replace with actual user ID
+                    userId: user.id,
                 });
             }
         });
-        setDocumentContent(newValue);  // Update local state with the new document content
+        setDocumentContent(newValue);
     }, [editor, socket, documentId]);
 
 
     return (
         <div>
-            <InputWithDebounce title={docName} />
+            <InputWithDebounce key={editorKey} title={docName} documentId={documentId} userId={user.id} socket={socket} />
             <div className="editor-container">
                 <Slate key={editorKey} editor={editor} initialValue={documentContent} onValueChange={handleChange}>
                     <Editable
                         placeholder="Start typing your document..."
-                        className="editor-placeholder"  // Optional: apply a class to the placeholder
+                        className="editable-container"
                     />
                 </Slate>
             </div>

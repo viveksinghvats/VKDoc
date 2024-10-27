@@ -1,8 +1,9 @@
 // src/App.js
-import React, { useContext } from 'react';
-import { Navigate, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import React, { useContext, useEffect } from 'react';
+import { Navigate, Outlet, RouterProvider, createBrowserRouter, useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { isTokenExpired, clearUserData } from './helpers/authHelper';
 import SignupPage from './components/Signup';
 import SigninPage from './components/Signin';
 import EditorPage from './components/Editor';
@@ -18,7 +19,7 @@ const PrivateRoute = ({ children }) => {
 const PreHomeRoute = () => {
     const user = Local.getloggedInUser();
     if (user) {
-        return <DocumentsPage/>
+        return <DocumentsPage />
     } else {
         return <PreHome />
     }
@@ -26,6 +27,20 @@ const PreHomeRoute = () => {
 }
 
 function App() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            const token = localStorage.getItem('token');
+            if (isTokenExpired(token)) {
+                clearUserData();
+                navigate("/signin");  // Redirect to login if token is expired
+            }
+        }, 1 * 60 * 1000); // Check every 1 minutes
+
+        return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    }, [history]);
+
     return (
         <div>
             <Outlet />
