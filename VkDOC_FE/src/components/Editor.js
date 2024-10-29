@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import DocService from '../services/DocService';
 import { useParams } from 'react-router-dom';
@@ -15,6 +15,7 @@ function EditorPage() {
     let { documentId } = useParams();
     const [editorKey, setEditorKey] = useState(0);
     const user = local.getloggedInUser();
+    let isRemote = false;
 
     // Fetch the document content when component mounts
     useEffect(() => {
@@ -40,22 +41,41 @@ function EditorPage() {
     }, [documentId]);
 
     const handleChange = useCallback((newValue) => {
-        editor.operations.forEach(op => {
-            if (op.type === 'insert_text' || op.type === 'remove_text') {
-                socket.sendMessage({
-                    documentId: documentId,
-                    change: {
-                        type: op.type,
-                        path: op.path,
-                        offset: op.offset,
-                        text: op.text
-                    },
-                    userId: user.id,
-                });
-            }
-        });
+        if (!isRemote) {
+            editor.operations.forEach(op => {
+                if (op.type === 'insert_text' || op.type === 'remove_text') {
+                    socket.sendMessage({
+                        documentId: documentId,
+                        change: {
+                            type: op.type,
+                            path: op.path,
+                            offset: op.offset,
+                            text: op.text
+                        },
+                        userId: user.id,
+                    });
+                }
+            });
+        }
+        isRemote = false;
         setDocumentContent(newValue);
     }, [editor, socket, documentId]);
+
+    // Listen for real-time updates from the server
+    useEffect(() => {
+        socket.addMessageListener((data) => {
+            if (data.documentId === documentId) {  // Process changes from other users
+                const { change } = data;
+                editor.apply({
+                    type: change.type,
+                    path: change.path,
+                    offset: change.offset,
+                    text: change.text,
+                });
+                isRemote = true;
+            }
+        });
+    }, [socket, documentId, editor, user.id]);
 
 
     return (

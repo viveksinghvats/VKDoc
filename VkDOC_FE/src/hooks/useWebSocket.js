@@ -21,8 +21,15 @@ export const useWebSocket = (url) => {
         }
     };
 
+    const addMessageListener = (callback) => {
+        if (socketRef.current) {
+            socketRef.current.onmessage = (event) => callback(JSON.parse(event.data));
+        }
+    };
+
     return {
         socket: socketRef.current,
-        sendMessage
+        sendMessage,
+        addMessageListener
     };
 };

@@ -34,13 +34,6 @@ function runSocket() {
             documentChanges[documentId] = [];
         }
         documentChanges[documentId].push(change);
-
-        // Broadcast changes to connected WebSocket clients
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({ documentId, change, userId }));
-            }
-        });
     });
 
     // Periodically save document changes to MongoDB every 5 seconds

@@ -1,6 +1,6 @@
 const { Kafka } = require('kafkajs');
 
-const kafka = new Kafka({ clientId: 'doc-collaboration', brokers: ['kafka:9092'] });
+const kafka = new Kafka({ clientId: 'doc-collaboration', brokers: [process.env.KAFKA_BROKER] });
 const consumer = kafka.consumer({ groupId: 'doc-group' });
 
 const consume = async (onMessage) => {
