@@ -9,8 +9,7 @@ const docRoutes = require('./routes/document.route');
 const docShareRoutes = require('./routes/docShare.route');
 const runSocket = require('./kafka/webs');
 const WebSocket = require('ws');
-runSocket();
-
+runSocket(); 
 // Kafka setup
 const kafka = new Kafka({
     clientId: 'myapp',

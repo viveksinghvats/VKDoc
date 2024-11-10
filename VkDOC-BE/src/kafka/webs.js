@@ -6,18 +6,28 @@ const { batchSaveChanges } = require('./mongoDbOperations');
 function runSocket() {
     const wss = new WebSocket.Server({ port: 8080 });
     let documentChanges = {};
+    let documentRooms = {};
 
     // WebSocket connection
     wss.on('connection', (ws) => {
+        let clientDocumentId = null;
         console.log('Socket connected on port: 8080');
         ws.on('message', (message) => {
-            const { documentId, change, userId } = JSON.parse(message);
-
+            const { documentId, change, userId, type } = JSON.parse(message);
             // Produce the change to Kafka
-            kafkaProducer.produce('document-updates', documentId, {documentId, change, userId });
+            if (type === 'join') {
+                clientDocumentId = documentId;
+                if (!documentRooms[clientDocumentId]) {
+                    documentRooms[clientDocumentId] = new Set();
+                }
+                documentRooms[clientDocumentId].add(ws);
+
+                return;
+            }
+            kafkaProducer.produce('document-updates', documentId, { documentId, change, userId });
 
             // Broadcast locally (Optional)
-            wss.clients.forEach(client => {
+            documentRooms[documentId].forEach(client => {
                 if (client !== ws && client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify({ documentId, change, userId }));
                 }

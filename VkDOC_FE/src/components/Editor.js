@@ -11,11 +11,12 @@ function EditorPage() {
     const editor = useMemo(() => withReact(createEditor()), []);
     const [documentContent, setDocumentContent] = useState([{ type: 'paragraph', children: [{ text: 'Loading...' }] }]);
     const [docName, setDocName] = useState('name');
-    const socket = useWebSocket('ws://localhost:8080');
     let { documentId } = useParams();
     const [editorKey, setEditorKey] = useState(0);
     const user = local.getloggedInUser();
     let isRemote = false;
+    const socket = useWebSocket('ws://localhost:8080', documentId, user.id);
+
 
     // Fetch the document content when component mounts
     useEffect(() => {
@@ -28,7 +29,7 @@ function EditorPage() {
 
                 setDocumentContent(content);
                 setDocName(doc.title);
-                setEditorKey(editorKey + 1);
+                setEditorKey((editorKey + 1) % 5);
             };
             fetchDocument();
         } else if (documentId === 'new') {
@@ -64,7 +65,7 @@ function EditorPage() {
     // Listen for real-time updates from the server
     useEffect(() => {
         socket.addMessageListener((data) => {
-            if (data.documentId === documentId) {  // Process changes from other users
+             // Process changes from other users
                 const { change } = data;
                 editor.apply({
                     type: change.type,
@@ -73,7 +74,7 @@ function EditorPage() {
                     text: change.text,
                 });
                 isRemote = true;
-            }
+            
         });
     }, [socket, documentId, editor, user.id]);
 
