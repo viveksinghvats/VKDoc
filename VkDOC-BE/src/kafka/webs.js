@@ -4,14 +4,14 @@ const kafkaConsumer = require('./kafkaConsumer');
 const { batchSaveChanges } = require('./mongoDbOperations');
 
 function runSocket() {
-    const wss = new WebSocket.Server({ port: 8080 });
+    const wss = new WebSocket.Server({ port: process.env.Socket_PORT });
     let documentChanges = {};
     let documentRooms = {};
 
     // WebSocket connection
     wss.on('connection', (ws) => {
         let clientDocumentId = null;
-        console.log('Socket connected on port: 8080');
+        console.log('Socket connected on port: ' + process.env.Socket_PORT);
         ws.on('message', (message) => {
             const { documentId, change, userId, type } = JSON.parse(message);
             // Produce the change to Kafka

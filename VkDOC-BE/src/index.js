@@ -45,7 +45,7 @@ app.use(express.urlencoded());
 app.use('/auth', authRoutes);
 app.use('/documents', docRoutes);
 app.use('/document-sharing', docShareRoutes);
-const port = 2000;
+const port = process.env.PORT;
 
 // Start server and services
 const startServer = async () => {
